@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\Touring.api.props" />
+</Project>
