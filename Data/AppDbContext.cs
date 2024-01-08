@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Touring.api.Models;
 
 public class AppDbContext:DbContext
 {

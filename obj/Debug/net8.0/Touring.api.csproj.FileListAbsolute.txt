@@ -126,3 +126,4 @@ C:\Users\manq2\Desktop\Mancoba\api\Touring.api\bin\Debug\net8.0\runtimes\win-arm
 C:\Users\manq2\Desktop\Mancoba\api\Touring.api\bin\Debug\net8.0\runtimes\win-arm64\native\e_sqlite3.dll
 C:\Users\manq2\Desktop\Mancoba\api\Touring.api\bin\Debug\net8.0\runtimes\win-x64\native\e_sqlite3.dll
 C:\Users\manq2\Desktop\Mancoba\api\Touring.api\bin\Debug\net8.0\runtimes\win-x86\native\e_sqlite3.dll
+C:\Users\manq2\Desktop\Mancoba\api\Touring.api\obj\Debug\net8.0\Touring.api.sourcelink.json
