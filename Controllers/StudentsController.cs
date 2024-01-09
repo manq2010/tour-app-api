@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using Touring.api.Models;
+using Touring.api.Data;
 
 // using Touring.api.Models;
 // using Touring.api.DBModels;
@@ -17,10 +18,15 @@ namespace Touring.api.Controllers
     public class StudentsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public StudentsController(AppDbContext context)
+        public StudentsController(
+            AppDbContext context,
+            IConfiguration configuration
+            )
         {
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpGet]
