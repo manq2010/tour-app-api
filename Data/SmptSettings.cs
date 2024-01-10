@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Touring.api.Models;
+using Touring.api.Data;
+using Touring.api.Logic;
 
 namespace Touring.api.Data
 {

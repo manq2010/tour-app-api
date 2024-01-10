@@ -13,6 +13,9 @@ using Microsoft.Extensions.Logging;
 // using Pomelo.EntityFrameworkCore.MySql.Storage;
 using Microsoft.AspNetCore.Identity;
 using Touring.api.Models;
+using Touring.api.Data;
+using Touring.api.Logic;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;

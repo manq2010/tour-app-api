@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using Touring.api.Models;
 using Touring.api.Data;
+using Touring.api.Logic;
 
 // using Touring.api.Models;
 // using Touring.api.DBModels;

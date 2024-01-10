@@ -20,6 +20,7 @@ using System;
 
 using Touring.api.Models;
 using Touring.api.Data;
+using Touring.api.Logic;
 
 namespace Touring.api.Controllers
 {
@@ -158,6 +159,35 @@ namespace Touring.api.Controllers
             }
             return statusCode;
         }
+
+        [HttpDelete("DeleteUser")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            ObjectResult statusCode = StatusCode(StatusCodes.Status400BadRequest, new Response { Status = "", Message = "" });
+
+            // Check if userId is provided
+            if (string.IsNullOrEmpty(id))
+            {
+                statusCode = StatusCode(StatusCodes.Status400BadRequest, new Response { Status = "Error", Message = "User Id not provided" });
+                return statusCode;
+            }
+
+            DbLogic logic = new DbLogic(_context);
+            var DBResponse = logic.DeleteUser(id);
+
+            // Check if the user deletion was successful
+            if (DBResponse == "Success")
+            {
+                statusCode = StatusCode(StatusCodes.Status200OK, new Response { Status = "Success", Message = "User deleted successfully" });
+            }
+            else
+            {
+                statusCode = StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User deletion unsuccessful" });
+            }
+        
+            return statusCode;
+        }
+
 
     }
 }
