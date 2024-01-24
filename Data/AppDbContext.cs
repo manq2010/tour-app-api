@@ -19,7 +19,7 @@ namespace Touring.api.Data
 
         public DbSet<ApplicationUser> User { get; set; }
         public DbSet<Student> Students { get; set; }
-
+        public DbSet<UserProfile> UserProfiles { get; set; }
 
 	}
 

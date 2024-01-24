@@ -1,25 +1,44 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Http;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
-using Touring.api.Data;
-// using MySql.Data.MySqlClient;
-// using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
-using System;
 using Microsoft.Extensions.Logging;
-// using Pomelo.EntityFrameworkCore.MySql.Storage;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Reflection;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Http;
+
 using Touring.api.Models;
 using Touring.api.Data;
 using Touring.api.Logic;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Http;
+using Touring.api.Helpers;
+using Touring.api.Services;
 
 namespace Touring.api.Data
 {
@@ -38,19 +57,95 @@ namespace Touring.api.Data
         {
 
             var _connectionString = "";
-            // _connectionString = Configuration.GetConnectionString("DatabaseConnection");
             _connectionString = Configuration.GetConnectionString("DefaultConnection");
             // var serverVersion = new ServerVersion(new Version(8, 0, 29));
 
             // Replace 'YourDbContext' with the name of your own DbContext derived class.
-           // services.AddDbContext<RizeMzanziContext>(
-           //     dbContextOptions => dbContextOptions
-            //        .UseMySql(_connectionString));
+            var connectionString = Configuration.GetConnectionString("ConnStr");
+            // services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
-            services.AddDbContextPool<AppDbContext>(options =>
+            services.AddDbContext<AppDbContext>(
+               options => options
+                   .UseSqlServer(connectionString));
+
+            // services.AddDbContextPool<AppDbContext>(options =>
+            // {
+            //     options.UseSqlite(_connectionString);
+            // });
+
+            //swagger service
+            services.AddApiVersioning(config =>
             {
-                options.UseSqlite(_connectionString);
+                config.DefaultApiVersion = new ApiVersion(1, 0);
+                config.ReportApiVersions = true;
+                config.AssumeDefaultVersionWhenUnspecified = true;
+
+
+                config.ApiVersionReader = new QueryStringApiVersionReader("api-version");
+                SwaggerConfig.UseQueryStringApiVersion("api-version");
+
             });
+
+            //Add swagger documentation
+            //services.AddSwaggerGen();
+            services.AddSwaggerGen(setup =>
+            {
+                setup.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo() { Title = "Api version  1", Version = "v1", Description = "V1 Description", });
+                setup.SwaggerDoc("v2", new Microsoft.OpenApi.Models.OpenApiInfo() { Title = "Api version  2", Version = "v2", Description = "V2 Description", });
+                /// options.OperationFilter<AddAcceptHeaderParameter>();
+                setup.OperationFilter<SwaggerParameterFilters>();
+                setup.DocumentFilter<SwaggerVersionMapping>();
+
+                setup.DocInclusionPredicate((version, desc) =>
+                {
+                    if (!desc.TryGetMethodInfo(out MethodInfo methodInfo)) return false;
+                    var versions = methodInfo.DeclaringType.GetCustomAttributes(true).OfType<ApiVersionAttribute>().SelectMany(attr => attr.Versions);
+                    var maps = methodInfo.GetCustomAttributes(true).OfType<MapToApiVersionAttribute>().SelectMany(attr => attr.Versions).ToArray();
+                    version = version.Replace("v", "");
+                    return versions.Any(v => v.ToString() == version && maps.Any(v => v.ToString() == version));
+                });
+
+                var jwtSecurityScheme = new OpenApiSecurityScheme
+                {
+                    BearerFormat = "JWT",
+                    Name = "JWT Authentication",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = JwtBearerDefaults.AuthenticationScheme,
+                    Description = "Put **_ONLY_** your JWT Bearer token on textbox below!",
+
+                    Reference = new OpenApiReference
+                    {
+                        Id = JwtBearerDefaults.AuthenticationScheme,
+                        Type = ReferenceType.SecurityScheme
+                    }
+                };
+
+                setup.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
+
+                setup.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    { jwtSecurityScheme, Array.Empty<string>() }
+                });
+            });
+
+
+
+             services.AddSingleton<IUriService>(o =>
+            {
+                var accessor = o.GetRequiredService<IHttpContextAccessor>();
+                var request = accessor.HttpContext.Request;
+                var uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent() + request.PathBase);
+                return new UriService(uri);
+            });
+
+            // MySQL Entity Framework
+            //**** Firt time setup Migrations to create identity tables ****/
+            //dotnet ef migrations add initPomeloIdentity -c ApplicationDbContext
+            //dotnet ef database update
+            // services.AddDbContext<AppDbContext>(options => options
+            //                                                 .UseSqlServer(Configuration.GetConnectionString("ConnStr"))
+            //                                               );
 
             services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
@@ -63,6 +158,7 @@ namespace Touring.api.Data
                 .AddRoleManager<RoleManager<IdentityRole>>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
+
             // Adding Authentication  
             services.AddAuthentication(options =>
             {
@@ -83,25 +179,6 @@ namespace Touring.api.Data
                };
            });
 
-
-            //services.AddCors(options =>
-            //{
-            //    options.AddDefaultPolicy(builder =>
-            //    {
-            //        builder.AllowAnyOrigin()
-            //               .AllowAnyHeader()
-            //               .AllowAnyMethod();
-            //    });
-
-            //    options.AddPolicy(name: "DefaultCorsPolicy",
-            //        builder =>
-            //        {
-            //            builder.AllowAnyOrigin()
-            //                   .AllowAnyHeader()
-            //                   .AllowAnyMethod();
-            //        });
-            //});
-
             services.AddCors(options =>
             {
                 options.AddPolicy(DefaultCorsPolicy,
@@ -110,6 +187,7 @@ namespace Touring.api.Data
                     builder.SetIsOriginAllowed(isOriginAllowed: _ => true).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                 });
             });
+
             //services.ConfigureApplicationCookie(config =>
             //{
             //    config.Cookie.Name = "DemoProjectCookie";
@@ -120,14 +198,6 @@ namespace Touring.api.Data
             //Add httpclient to call 3rd party APIs
             services.AddHttpClient();
 
-            // services.AddSingleton<IUriService>(o =>
-            // {
-            //     var accessor = o.GetRequiredService<IHttpContextAccessor>();
-            //     var request = accessor.HttpContext.Request;
-            //     var uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent() + request.PathBase);
-            //     return new UriService(uri);
-            // });
-
             //services.AddControllers();
             services.AddControllers().AddJsonOptions(options =>
             {
@@ -137,10 +207,10 @@ namespace Touring.api.Data
 
             // services.AddScoped<IRizemzanziRepo, SqlRizeMzanziRepo>();
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "rizemzanziAPI", Version = "v1" });
-            });
+            // services.AddSwaggerGen(c =>
+            // {
+            //     // c.SwaggerDoc("v1", new OpenApiInfo { Title = "touringAPI", Version = "v1" });
+            // });
 
         }
 
@@ -150,13 +220,21 @@ namespace Touring.api.Data
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "rizemzanziAPI v1"));
+
+                app.UseSwagger(options => options.RouteTemplate = "swagger/{documentName}/swagger.json");
+                app.UseSwaggerUI(options =>
+                {
+                    //options.SwaggerEndpoint("./v1/swagger.json", "Jcred API v1");
+                    options.DocumentTitle = "TOURING API Documentation";
+                    options.SwaggerEndpoint($"/swagger/v1/swagger.json", $"Touring API v1");
+                    options.SwaggerEndpoint($"/swagger/v2/swagger.json", $"Touring API v2");
+                });
             }
 
             //app.UseHttpsRedirection();//causes too many redirect
 
             app.UseRouting();
+
             //always enable cors AFTER routing 
             //app.UseCors(builder =>
             //{
@@ -165,6 +243,7 @@ namespace Touring.api.Data
             //    .AllowAnyMethod()
             //    .AllowAnyHeader();
             //});
+
             app.UseCors(DefaultCorsPolicy);
 
 

@@ -7,7 +7,7 @@ namespace Touring.api.Models
 {
     [NotMapped]
     public class LoginModel
-    {
+   {
         [Required(ErrorMessage = "User Name is required")]
         public string Username { get; set; }
 

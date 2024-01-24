@@ -1,11 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Controllers",
     "\\Data",
-    "\\Migrations",
     "\\Models"
   ],
-  "SelectedNode": "\\Controllers\\AuthenticateController.cs",
+  "SelectedNode": "\\Touring.api.sln",
   "PreviewInSolutionExplorer": false
 }
