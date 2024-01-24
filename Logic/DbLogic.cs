@@ -109,7 +109,6 @@ namespace Touring.api.Logic
 
          public void DeleteUserProfileById(int id)
         {
-
             bool insertMode = id == 0;
 
             var record = _context.UserProfiles.Where(d => d.UserProfileId == id).FirstOrDefault();
@@ -148,6 +147,20 @@ namespace Touring.api.Logic
             }
         }
 
+        public List<Gender> GetAllGenders()
+        {
+            IQueryable<Gender> toReturn;
+
+            try
+            {
+                toReturn = _context.Genders.AsQueryable();
+            }
+            catch (Exception err)
+            {
+                throw;
+            }
+            return toReturn.ToList();
+        }
 
 
     }

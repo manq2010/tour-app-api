@@ -39,6 +39,7 @@ using Touring.api.Data;
 using Touring.api.Logic;
 using Touring.api.Helpers;
 using Touring.api.Services;
+using Touring.api.Extensions;
 
 namespace Touring.api.Data
 {
@@ -229,6 +230,8 @@ namespace Touring.api.Data
                     options.SwaggerEndpoint($"/swagger/v1/swagger.json", $"Touring API v1");
                     options.SwaggerEndpoint($"/swagger/v2/swagger.json", $"Touring API v2");
                 });
+
+                app.ApplyMigrations();
             }
 
             //app.UseHttpsRedirection();//causes too many redirect
