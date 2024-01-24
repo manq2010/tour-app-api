@@ -66,7 +66,7 @@ namespace Touring.api.Controllers
         [MapToApiVersion("1")]
         [AllowAnonymous]
         
-        public IActionResult GetPagedAllUsers([FromQuery] PaginationFilter filter)
+        public IActionResult GetPagedAllLeaders([FromQuery] PaginationFilter filter)
         {
             DbLogic logic = new DbLogic(_context);
 
@@ -80,16 +80,18 @@ namespace Touring.api.Controllers
                 var route = Request.Path.Value;
                 var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-                var pagedData = _context.UserProfiles
-                    .Where(d => d.isdeleted == false && d.UserRole=="Subscriber")
-                    .OrderByDescending(d => d.UserProfileId)
+                var pagedData = _context.Leaders
+                    .Where(d => d.isdeleted == false)
+                    .Include(d => d.Gender)
+                    .OrderByDescending(d => d.Id)
                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
                .Take(validFilter.PageSize)
                .ToList();
-                var totalRecords = _context.UserProfiles.Where(d => d.isdeleted == false).Count();
+
+                var totalRecords = _context.Leaders.Where(d => d.isdeleted == false).Count();
 
                 //return Ok(new PagedResponse<List<cbbuser>>(pagedData, validFilter.PageNumber, validFilter.PageSize));
-                var pagedReponse = PaginationHelper.CreatePagedReponse<UserProfile>(pagedData, validFilter, totalRecords, _uriService, route);
+                var pagedReponse = PaginationHelper.CreatePagedReponse<Leader>(pagedData, validFilter, totalRecords, _uriService, route);
                 return Ok(pagedReponse);
 
             }
@@ -101,5 +103,102 @@ namespace Touring.api.Controllers
                 return BadRequest(new Response { Status = "Error", Message = err.Message });
             }
         }
+
+
+        [HttpGet]
+        [Route("GetAllLeaders")]
+        [MapToApiVersion("1")]
+        [AllowAnonymous]
+         public IActionResult GetAllLeaders()
+        {
+            try
+            {
+                var alldata = _context.Leaders
+                    .Where(d => d.isdeleted == false)
+                    .Include(d => d.Gender)
+                    // .Include(d => d.Region)
+                    // .Include(d => d.CandidateStatus)
+                    .ToList();
+               
+                return Ok(alldata);
+
+            }
+            catch (Exception err)
+            {
+                string message = err.Message;
+                return BadRequest(new Response { Status = "Error", Message = err.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("PostInsertNewLeader")]
+        [MapToApiVersion("1")]
+         public ActionResult<string> PostInsertNewLeader(Leader leader)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.SelectMany(x => x.Value.Errors.Select(y => y.ErrorMessage)).ToList());
+            }
+
+            ObjectResult response = StatusCode(StatusCodes.Status400BadRequest, new Response { Status = "", Message = "" });
+
+            
+            if (ModelState.IsValid)
+            {
+
+                DbLogic logic = new DbLogic(_context, _configuration);
+                var leaderExist = logic.LeaderExist(leader);
+                if ((!leaderExist && leader.Id==0)||(leaderExist && leader.Id != 0) || (!leaderExist && leader.Id != 0))
+                {
+
+                    var DBResponse = logic.PostInsertNewLeader(leader);
+                    if (DBResponse == "Success")
+                    { response = StatusCode(StatusCodes.Status200OK, new Response { Status = "Success", Message = "Successfully added new leader", DetailDescription = leader }); }
+                    else
+                    {
+                        response = StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Failed", Message = "Failed to add new leader" });
+                    }
+                }
+                else
+                {
+                    response = StatusCode(StatusCodes.Status400BadRequest, new Response { Status = "DuplicateLeaderAddition", Message = "Leader already exist" });
+                }
+            }
+
+            else
+            {
+                response = StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Failed", Message = "Model State Is Invalid" });
+            }
+
+            return response;
+        }
+
+        [HttpPost("DeleteLeader")]
+        [MapToApiVersion("1")]
+        public ActionResult<string> DeleteLeader(int id)
+        {
+            ObjectResult response = StatusCode(StatusCodes.Status400BadRequest, new Response { Status = "", Message = "" });
+
+            if (ModelState.IsValid)
+            {
+                DbLogic logic = new DbLogic(_context);
+                var DBResponse = logic.DeleteLeader(id);
+                if (DBResponse == "Success")
+                { response = StatusCode(StatusCodes.Status200OK, new Response { Status = "Success", Message = "Successfully deleted leader" }); }
+                else
+                {
+                    response = StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Failed", Message = "Failed to delete leader" });
+                }
+            }
+
+            else
+            {
+                response = StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Failed", Message = "Model State Is Invalid" });
+            }
+
+            return response;
+        }
+
+
     }
 }

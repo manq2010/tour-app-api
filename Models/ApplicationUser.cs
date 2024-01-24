@@ -9,7 +9,7 @@ namespace Touring.api.Models
         public bool IsActive { get; set; }
         public bool IsAdminUser { get; set; }
 
-        public bool deleted { get; set; }
+        public bool isdeleted { get; set; }
         public Nullable<System.DateTime> deleted_at { get; set; }
         public Nullable<System.DateTime> created_at { get; set; }
         public Nullable<System.DateTime> updated_at { get; set; }

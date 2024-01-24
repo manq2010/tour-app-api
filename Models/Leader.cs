@@ -23,7 +23,7 @@ namespace Touring.api.Models
         public string CellNumber { get; set; }
         public Nullable<System.DateTime> created_at { get; set; }
         public Nullable<System.DateTime> updated_at { get; set; }
-        public Nullable<bool> deleted { get; set; }
+        public Nullable<bool> isdeleted { get; set; }
         public Nullable<System.DateTime> deleted_at { get; set; }
 
         [Required]

@@ -30,11 +30,11 @@ namespace Touring.api.Logic
             var message = "";
             try
             {
-                var user = _context.User.FirstOrDefault(a => a.Id == id && !a.deleted);
+                var user = _context.User.FirstOrDefault(a => a.Id == id && !a.isdeleted);
 
                 if (user != null)
                 {
-                    user.deleted = true;
+                    user.isdeleted = true;
                     user.deleted_at = DateTime.Now;
 
                     _context.SaveChanges();
@@ -161,6 +161,176 @@ namespace Touring.api.Logic
             }
             return toReturn.ToList();
         }
+
+        public bool LeaderExist(Leader leader)
+        {
+            try
+            {
+                var cnt = _context.Leaders.Where(d => d.Email == leader.Email && leader.isdeleted == false).Count();
+
+                if (cnt > 0)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            return false;
+        }
+
+        public string PostInsertNewLeader(Leader leader)
+        {
+            var message = "";
+
+            if (leader.Id == 0)
+            {
+                try
+                {
+                    leader.created_at = DateTime.Now;
+                    leader.updated_at = DateTime.Now;
+                    leader.isdeleted = false;
+                    _context.Leaders.Add(leader);
+                    _context.SaveChanges();
+                    message = "Success";
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+            else
+            {
+                leader.updated_at = DateTime.Now;
+                leader.isdeleted = false;
+                _context.Leaders.Update(leader);
+                _context.SaveChanges();
+                message = "Success";
+            }
+
+            return message;
+        }
+
+        public string DeleteLeader(int id)
+        {
+            var message = "";
+
+            try
+            {
+                var leader = _context.Leaders.First(a => a.Id == id);
+
+                leader.isdeleted = true;
+                leader.deleted_at = DateTime.Now;
+
+                _context.SaveChanges();
+                message = "Success";
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+            return message;
+        }
+
+        public DocumentLeader InsertUpdateDocLeader(DocumentLeader item)
+        {
+            bool insertMode = item.Id == 0;
+
+            try
+            {
+                if (item != null)
+                {
+                    var clpExist = _context.DocumentsLeader.FirstOrDefault(f => (f.LeaderId == item.LeaderId) && (f.DocTypeName == item.DocTypeName));
+
+                    if (clpExist != null)
+                        insertMode = item.Id == 0;
+
+                    if (insertMode)
+                    {
+
+                        _context.DocumentsLeader.Add(item);
+                    }
+                    else
+                    {
+                        var local = _context.Set<DocumentLeader>()
+                    .Local
+                    .FirstOrDefault(f => (f.LeaderId == item.LeaderId) && (f.DocTypeName == item.DocTypeName));
+                        if (local != null)
+                        {
+                            _context.Entry(local).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                        }
+                        _context.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                    }
+
+                    _context.SaveChanges();
+
+                }
+            }
+            catch (Exception err)
+            {
+                string errMessage = err.Message;
+                // Write to log
+                throw;
+            }
+
+            return (item);
+        }
+
+        public DocumentLeader GetDocLeaderById(int Id)
+        {
+            DocumentLeader item = new DocumentLeader();
+
+            try 
+            {
+                item = _context.DocumentsLeader.Where(d => d.Id == Id).FirstOrDefault();
+            } 
+            catch (Exception err) 
+            { 
+
+            }            
+
+            return (item);
+        }
+
+        public List<DocumentLeader> GetLeaderFilesListById(int Id)
+        {
+            List<DocumentLeader> items = new List<DocumentLeader>();
+
+            try
+            {
+                items = _context.DocumentsLeader.Where(d => d.LeaderId == Id && d.isdeleted==false).ToList();
+            }
+            catch (Exception err)
+            {
+
+            }
+            return (items);
+        }
+
+        public string DeleteDocLeader(int id)
+        {
+            var message = "";
+
+            try
+            {
+                var doc = _context.DocumentsLeader.First(a => a.Id == id);
+
+                doc.isdeleted = true;
+                doc.deleted_at = DateTime.Now;
+
+                _context.SaveChanges();
+                message = "Success";
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+            return message;
+        }
+
 
 
     }

@@ -331,7 +331,7 @@ namespace Touring.api.Controllers
         [MapToApiVersion("2")]
         public async Task<IActionResult> GetAllUserLogins()
         {
-            var users = _userManager.Users.Where(d => d.deleted == false);
+            var users = _userManager.Users.Where(d => d.isdeleted == false);
             if (users == null)
             {
                 return Unauthorized(new { response = "Invalid users" });
